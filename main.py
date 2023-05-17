@@ -48,6 +48,9 @@ class Pipe:
     def update(self):
         self.x -= 5
 
+    def update(self, speed):
+        self.x -= speed
+
     def draw(self, screen):
         pygame.draw.rect(screen, WHITE, (self.x, self.y, self.width, self.height))
 
@@ -68,6 +71,14 @@ class Game:
         self.mario = Mario()
         self.pipe = Pipe.create_pipe()
         self.start_time = pygame.time.get_ticks()
+        self.speed = 5  # Velocidade inicial
+        self.last_speed_increase = 0
+
+    def increase_speed(self, elapsed_time):
+        if elapsed_time - self.last_speed_increase >= 10:
+            self.speed += 2
+            self.last_speed_increase = elapsed_time
+            print("Velocidade aumentada para:", self.speed)
 
     def run(self):
         running = True
@@ -83,7 +94,7 @@ class Game:
                         self.mario.jump()
 
             self.mario.update()
-            self.pipe.update()
+            self.pipe.update(self.speed)
 
             if self.pipe.x + self.pipe.width < 0:
                 self.pipe = Pipe.create_pipe()
@@ -102,6 +113,19 @@ class Game:
             # Calcula a distância a partir da parte frontal do Pipe
             distance_to_pipe = self.pipe.x - (self.mario.x + self.mario.width)
             print("Distância do Mario para o Pipe:", distance_to_pipe)
+            print("Altura do Pipe:", self.pipe.height)
+
+            """
+                pulando em condicoes ideais:
+            """
+            if 15 > distance_to_pipe > 0:
+                print("Pulando...")
+                self.mario.jump()
+
+            """
+                aumentando a velocidade a cada 60 segundos:
+            """
+            self.increase_speed(elapsed_time)
 
             # Renderiza o texto na tela
             font = pygame.font.Font(None, 36)
