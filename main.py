@@ -19,6 +19,7 @@ class Mario:
         self.height = 50
         self.velocity = 0
         self.is_jumping = False
+        self.distance_to_pipe = 0
 
     def jump(self):
         if not self.is_jumping:
@@ -38,8 +39,8 @@ class Mario:
 
 
 class Pipe:
-    def __init__(self, height):
-        self.x = SCREEN_WIDTH
+    def __init__(self, height, x):
+        self.x = x
         self.width = 50
         self.height = height
         self.y = SCREEN_HEIGHT - self.height
@@ -50,10 +51,11 @@ class Pipe:
     def draw(self, screen):
         pygame.draw.rect(screen, WHITE, (self.x, self.y, self.width, self.height))
 
-
-def create_pipe():
-    height = random.randint(15, 30)  # Altura aleatória entre 15 e 30
-    return Pipe(height)
+    @staticmethod
+    def create_pipe():
+        height = random.randint(15, 30)  # Altura aleatória entre 15 e 30
+        x = SCREEN_WIDTH
+        return Pipe(height, x)
 
 
 class Game:
@@ -64,12 +66,8 @@ class Game:
 
         self.clock = pygame.time.Clock()
         self.mario = Mario()
-        self.pipe = create_pipe()
+        self.pipe = Pipe.create_pipe()
         self.start_time = pygame.time.get_ticks()
-
-    def print_distance(self):
-        distance = abs(self.mario.x - self.pipe.x)
-        print("Distância do Mario para o Pipe:", distance - 45)
 
     def run(self):
         running = True
@@ -88,7 +86,7 @@ class Game:
             self.pipe.update()
 
             if self.pipe.x + self.pipe.width < 0:
-                self.pipe = create_pipe()
+                self.pipe = Pipe.create_pipe()
 
             if self.mario.x + self.mario.width > self.pipe.x and \
                     self.mario.x < self.pipe.x + self.pipe.width and \
@@ -101,7 +99,9 @@ class Game:
             self.mario.draw(self.screen)
             self.pipe.draw(self.screen)
 
-            self.print_distance()  # Chama a função para exibir a distância
+            # Calcula a distância a partir da parte frontal do Pipe
+            distance_to_pipe = self.pipe.x - (self.mario.x + self.mario.width)
+            print("Distância do Mario para o Pipe:", distance_to_pipe)
 
             # Renderiza o texto na tela
             font = pygame.font.Font(None, 36)
