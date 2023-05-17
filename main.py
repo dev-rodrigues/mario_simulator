@@ -45,9 +45,6 @@ class Pipe:
         self.height = height
         self.y = SCREEN_HEIGHT - self.height
 
-    def update(self):
-        self.x -= 5
-
     def update(self, speed):
         self.x -= speed
 
