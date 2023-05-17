@@ -161,13 +161,6 @@ class Game:
                 self.mario.jump()
 
             """
-                pulando em condicoes ideais:
-            """
-            # if 15 > distance_to_pipe > 0:
-            #     print("Pulando...")
-            #     self.mario.jump()
-
-            """
                 aumentando a velocidade a cada 60 segundos:
             """
             self.increase_speed(elapsed_time)
