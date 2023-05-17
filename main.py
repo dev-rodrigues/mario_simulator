@@ -1,3 +1,5 @@
+import uuid
+
 import numpy as np
 import pygame
 import sys
@@ -48,6 +50,7 @@ class NeuralNetwork:
 
 class Mario:
     def __init__(self):
+        self.id = uuid.uuid4()
         self.x = 50
         self.y = SCREEN_HEIGHT - 100
         self.width = 50
@@ -91,6 +94,24 @@ class Pipe:
         height = random.randint(15, 30)  # Altura aleatória entre 15 e 30
         x = SCREEN_WIDTH
         return Pipe(height, x)
+
+
+class GeneticAlgorithm:
+    def __int__(self):
+        self.marios = self.create_population()
+
+    def create_population(self):
+        for i in range(10):
+            self.marios.append(Mario())
+
+    def train(self):
+        for n in range(100):
+            SimulationGame(self.marios)
+
+
+class SimulationGame:
+    def __init__(self, marios):
+        self.marios = marios
 
 
 class Game:
