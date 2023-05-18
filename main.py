@@ -193,6 +193,7 @@ class SimulationGame:
         speed = 5  # Velocidade inicial
         last_speed_increase = 0
         max_speed = 20
+        new_generation = []
 
         running = True
         while running:
@@ -208,6 +209,7 @@ class SimulationGame:
                     i].width and mario.y + mario.height > pipes[i].y:
                     self.marios.pop(i)  # Remove o Mario que colidiu do array
                     new_mario = self.genetic_algorithm.create_new_mario()
+                    # TODO: ao invés de adicionar novo mario, guardar o novo mario para a próxima geração
                     self.marios.append(new_mario)  # Adiciona o novo Mario na lista
                     # running = False
 
@@ -298,6 +300,7 @@ class GeneticAlgorithm:
         generation = 0
         while generation < max_generations:
             simulation = SimulationGame(self.marios, genetic_algorithm)
+            # TODO: retornar nova geracao do game simulation
             simulation.run_simulation()
 
             new_generation = []
