@@ -14,12 +14,6 @@ WHITE = (255, 255, 255)
 BLUE = (0, 0, 255)
 
 
-# [
-# distanci
-# velocidade
-# altura
-# ]
-
 class NeuralNetwork:
     def __init__(self, input_size, hidden_size, output_size, w1, w2):
         self.input_size = input_size
@@ -49,7 +43,7 @@ class NeuralNetwork:
 
 
 class Mario:
-    def __init__(self):
+    def __init__(self, genome):
         self.id = uuid.uuid4()
         self.x = 50
         self.y = SCREEN_HEIGHT - 100
@@ -58,6 +52,8 @@ class Mario:
         self.velocity = 0
         self.is_jumping = False
         self.distance_to_pipe = 0
+        self.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        self.genome = genome
 
     def jump(self):
         if not self.is_jumping:
@@ -73,7 +69,7 @@ class Mario:
                 self.is_jumping = False
 
     def draw(self, screen):
-        pygame.draw.rect(screen, BLUE, (self.x, self.y, self.width, self.height))
+        pygame.draw.rect(screen, self.color, (self.x, self.y, self.width, self.height))
 
 
 class Pipe:
@@ -94,24 +90,6 @@ class Pipe:
         height = random.randint(15, 30)  # Altura aleatória entre 15 e 30
         x = SCREEN_WIDTH
         return Pipe(height, x)
-
-
-class GeneticAlgorithm:
-    def __int__(self):
-        self.marios = self.create_population()
-
-    def create_population(self):
-        for i in range(10):
-            self.marios.append(Mario())
-
-    def train(self):
-        for n in range(100):
-            SimulationGame(self.marios)
-
-
-class SimulationGame:
-    def __init__(self, marios):
-        self.marios = marios
 
 
 class Game:
@@ -199,6 +177,158 @@ class Game:
         sys.exit()
 
 
+class SimulationGame:
+    def __init__(self, marios, genetic_algorithm):
+        self.marios = marios
+        self.genetic_algorithm = genetic_algorithm
+
+    def run_simulation(self):
+        pygame.init()
+        screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        pygame.display.set_caption("Jump Mario")
+
+        clock = pygame.time.Clock()
+        pipes = [Pipe.create_pipe() for _ in range(len(self.marios))]
+        start_time = pygame.time.get_ticks()
+        speed = 5  # Velocidade inicial
+        last_speed_increase = 0
+        max_speed = 20
+
+        running = True
+        while running:
+            clock.tick(30)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+
+            for i, mario in enumerate(self.marios):
+                mario.update()
+                if mario.x + mario.width > pipes[i].x and mario.x < pipes[i].x + pipes[
+                    i].width and mario.y + mario.height > pipes[i].y:
+                    self.marios.pop(i)  # Remove o Mario que colidiu do array
+                    new_mario = self.genetic_algorithm.create_new_mario()
+                    self.marios.append(new_mario)  # Adiciona o novo Mario na lista
+                    # running = False
+
+            for i, pipe in enumerate(pipes):
+                pipe.update(speed)
+                if pipe.x + pipe.width < 0:
+                    pipes[i] = Pipe.create_pipe()
+
+            elapsed_time = (pygame.time.get_ticks() - start_time) // 1000
+            screen.fill((0, 0, 0))
+            for mario in self.marios:
+                mario.draw(screen)
+
+            for pipe in pipes:
+                pipe.draw(screen)
+
+            distances_to_pipe = [pipe.x - (mario.x + mario.width) for mario, pipe in zip(self.marios, pipes)]
+
+            for i, mario in enumerate(self.marios):
+                genome = mario.genome
+                nn = NeuralNetwork(3, 6, 1, genome, np.random.uniform(-1, 1, 1))
+                output = nn.forward([distances_to_pipe[i], speed, pipes[i].height])[0]
+
+                if output > 0.5:
+                    mario.jump()
+
+            if elapsed_time - last_speed_increase >= 10 and speed < max_speed:
+                speed += 2
+                last_speed_increase = elapsed_time
+                print("Velocidade aumentada para:", speed)
+
+            font = pygame.font.Font(None, 36)
+            text = font.render("Tempo: {}s".format(elapsed_time), True, WHITE)
+            text_rect = text.get_rect()
+            text_rect.topleft = (10, 10)
+            screen.blit(text, text_rect)
+
+            pygame.display.flip()
+
+        pygame.quit()
+        sys.exit()
+
+
+class GeneticAlgorithm:
+    def __init__(self):
+        self.marios = []
+        self.crossover_count = 0
+
+    def create_population(self, population_size):
+        for _ in range(population_size):
+            genome = np.random.uniform(-1, 1, 3)  # criação aleatória de genoma
+            self.marios.append(Mario(genome))
+
+    def mutate(self, mario):
+        mutated_genome = mario.genome  # Implemente a lógica de mutação adequada para o seu problema
+        # adicionar um valor aleatório pequeno a cada gene
+        mutated_genome += np.random.uniform(-0.1, 0.1, len(mutated_genome))
+        mario.genome = mutated_genome
+
+    def crossover(self, parent1, parent2):
+        if parent1 is None or parent2 is None:
+            return None
+        child_genome = np.mean([parent1.genome, parent2.genome], axis=0)  # média dos genomas dos pais
+        child = Mario(child_genome)
+        self.crossover_count += 1
+        print("Cruzamento número:", self.crossover_count)
+        return child
+
+    def select_parent(self):
+        tournament_size = min(3, len(self.marios))  # Limitar o tamanho do torneio ao tamanho da população
+        tournament_candidates = random.sample(self.marios, tournament_size)  # Seleciona Marios aleatoriamente
+
+        if not tournament_candidates:  # Verifica se a lista de candidatos está vazia
+            return None
+
+        best_mario = max(tournament_candidates, key=lambda mario: mario.distance_to_pipe)
+        return Mario(best_mario.genome.copy())
+
+    def create_new_mario(self):
+        parent1 = self.select_parent()
+        parent2 = self.select_parent()
+        child = self.crossover(parent1, parent2)
+        if child is not None:
+            self.mutate(child)
+        return child
+
+    def train(self, genetic_algorithm, max_generations):
+        generation = 0
+        while generation < max_generations:
+            simulation = SimulationGame(self.marios, genetic_algorithm)
+            simulation.run_simulation()
+
+            new_generation = []
+            best_mario = max(self.marios, key=lambda mario: mario.fitness) if self.marios else None
+            if best_mario:
+                new_generation.append(best_mario)
+
+            while len(new_generation) < len(self.marios):
+                parent1 = None
+                parent2 = None
+
+                # Seleção dos pais
+                while parent1 is None:
+                    parent1 = self.select_parent()
+
+                while parent2 is None or parent2 == parent1:
+                    parent2 = self.select_parent()
+
+                # Aplicar cruzamento para criar um filho
+                child = self.crossover(parent1, parent2)
+
+                if child is not None:
+                    self.mutate(child)
+                    new_generation.append(child)
+
+            self.marios = new_generation
+            generation += 1
+            print("Geração:", generation)
+
+
 if __name__ == "__main__":
-    game = Game()
-    game.run()
+    algorithm = GeneticAlgorithm()
+    algorithm.create_population(4)
+    algorithm.train(algorithm, 1000)
