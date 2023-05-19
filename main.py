@@ -54,6 +54,7 @@ class Mario:
         self.distance_to_pipe = 0
         self.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         self.genome = genome
+        self.fitness = 0
 
     def jump(self):
         if not self.is_jumping:
@@ -203,15 +204,24 @@ class SimulationGame:
                 if event.type == pygame.QUIT:
                     running = False
 
+            distances_to_pipe = [pipe.x - (mario.x + mario.width) for mario, pipe in zip(self.marios, pipes)]
+
             for i, mario in enumerate(self.marios):
                 mario.update()
                 if mario.x + mario.width > pipes[i].x and mario.x < pipes[i].x + pipes[
                     i].width and mario.y + mario.height > pipes[i].y:
                     self.marios.pop(i)  # Remove o Mario que colidiu do array
-                    new_mario = self.genetic_algorithm.create_new_mario()
-                    # TODO: ao invés de adicionar novo mario, guardar o novo mario para a próxima geração
-                    self.marios.append(new_mario)  # Adiciona o novo Mario na lista
+                    # new_mario = self.genetic_algorithm.create_new_mario()
+                    # self.marios.append(new_mario)  # Adiciona o novo Mario na lista
+                    # new_generation.append(new_mario)  # Adiciona o novo Mario na lista
                     # running = False
+                    if len(self.marios) == 0:
+                        running = False
+
+                if distances_to_pipe[i] < mario.x:
+                    mario.fitness += 100
+
+                mario.fitness += 1
 
             for i, pipe in enumerate(pipes):
                 pipe.update(speed)
@@ -225,8 +235,6 @@ class SimulationGame:
 
             for pipe in pipes:
                 pipe.draw(screen)
-
-            distances_to_pipe = [pipe.x - (mario.x + mario.width) for mario, pipe in zip(self.marios, pipes)]
 
             for i, mario in enumerate(self.marios):
                 genome = mario.genome
@@ -249,8 +257,9 @@ class SimulationGame:
 
             pygame.display.flip()
 
-        pygame.quit()
-        sys.exit()
+        #pygame.quit()
+        #sys.exit()
+        # return new_generation
 
 
 class GeneticAlgorithm:
@@ -302,6 +311,7 @@ class GeneticAlgorithm:
             simulation = SimulationGame(self.marios, genetic_algorithm)
             # TODO: retornar nova geracao do game simulation
             simulation.run_simulation()
+            # print("Novos Marios:", newMarios)
 
             new_generation = []
             best_mario = max(self.marios, key=lambda mario: mario.fitness) if self.marios else None
@@ -322,9 +332,10 @@ class GeneticAlgorithm:
                 # Aplicar cruzamento para criar um filho
                 child = self.crossover(parent1, parent2)
 
-                if child is not None:
+                if child is not None and random.random() < 0.1:  # 10% de chance de mutação
                     self.mutate(child)
-                    new_generation.append(child)
+
+                new_generation.append(child)
 
             self.marios = new_generation
             generation += 1
