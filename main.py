@@ -11,7 +11,6 @@ SCREEN_HEIGHT = 600
 
 # Definindo as cores
 WHITE = (255, 255, 255)
-BLUE = (0, 0, 255)
 
 
 class NeuralNetwork:
@@ -161,9 +160,7 @@ class Game:
             if saida > 0.5:
                 self.mario.jump()
 
-            """
-                aumentando a velocidade a cada 60 segundos:
-            """
+            # aumentando a velocidade a cada 60 segundos:
             self.increase_speed(elapsed_time)
 
             # Renderiza o texto na tela
@@ -265,8 +262,6 @@ class SimulationGame:
 
             pygame.display.flip()
 
-        # pygame.quit()
-        # sys.exit()
         return dead_marios
 
 
