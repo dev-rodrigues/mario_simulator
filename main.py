@@ -43,7 +43,7 @@ class NeuralNetwork:
 
 
 class Mario:
-    def __init__(self, genome):
+    def __init__(self, genome, genomeOutput):
         self.id = uuid.uuid4()
         self.x = 50
         self.y = SCREEN_HEIGHT - 100
@@ -54,6 +54,7 @@ class Mario:
         self.distance_to_pipe = 0
         self.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         self.genome = genome
+        self.genomeOutput = genomeOutput
         self.fitness = 0
 
     def jump(self):
@@ -94,13 +95,13 @@ class Pipe:
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, mario):
         pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Jump Mario")
 
         self.clock = pygame.time.Clock()
-        self.mario = Mario()
+        self.mario = mario
         self.pipe = Pipe.create_pipe()
         self.start_time = pygame.time.get_ticks()
         self.speed = 5  # Velocidade inicial
@@ -151,8 +152,8 @@ class Game:
                 3,
                 6,
                 1,
-                np.random.uniform(-1, 1, 3),
-                np.random.uniform(-1, 1, 1),
+                self.mario.genome,
+                self.mario.genomeOutput,
             )
 
             saida = nn.forward([distance_to_pipe, self.speed, self.pipe.height])[0]
@@ -194,9 +195,11 @@ class SimulationGame:
         speed = 5  # Velocidade inicial
         last_speed_increase = 0
         max_speed = 20
-        new_generation = []
+        dead_marios = []
 
         running = True
+        teste = 0
+
         while running:
             clock.tick(30)
 
@@ -206,15 +209,19 @@ class SimulationGame:
 
             distances_to_pipe = [pipe.x - (mario.x + mario.width) for mario, pipe in zip(self.marios, pipes)]
 
+            if teste == 0:
+                for i, mario in enumerate(self.marios):
+                    mario.jump()
+
+            teste = teste + 1
+
             for i, mario in enumerate(self.marios):
                 mario.update()
                 if mario.x + mario.width > pipes[i].x and mario.x < pipes[i].x + pipes[
                     i].width and mario.y + mario.height > pipes[i].y:
+                    dead_marios.append(mario)
                     self.marios.pop(i)  # Remove o Mario que colidiu do array
-                    # new_mario = self.genetic_algorithm.create_new_mario()
-                    # self.marios.append(new_mario)  # Adiciona o novo Mario na lista
-                    # new_generation.append(new_mario)  # Adiciona o novo Mario na lista
-                    # running = False
+
                     if len(self.marios) == 0:
                         running = False
 
@@ -238,7 +245,8 @@ class SimulationGame:
 
             for i, mario in enumerate(self.marios):
                 genome = mario.genome
-                nn = NeuralNetwork(3, 6, 1, genome, np.random.uniform(-1, 1, 1))
+
+                nn = NeuralNetwork(3, 6, 1, genome, mario.genomeOutput)
                 output = nn.forward([distances_to_pipe[i], speed, pipes[i].height])[0]
 
                 if output > 0.5:
@@ -257,9 +265,9 @@ class SimulationGame:
 
             pygame.display.flip()
 
-        #pygame.quit()
-        #sys.exit()
-        # return new_generation
+        # pygame.quit()
+        # sys.exit()
+        return dead_marios
 
 
 class GeneticAlgorithm:
@@ -270,19 +278,23 @@ class GeneticAlgorithm:
     def create_population(self, population_size):
         for _ in range(population_size):
             genome = np.random.uniform(-1, 1, 3)  # criação aleatória de genoma
-            self.marios.append(Mario(genome))
+            genome_output = np.random.uniform(-1, 1, 1)
+            mario = Mario(genome, genome_output)
+            self.marios.append(mario)
 
     def mutate(self, mario):
         mutated_genome = mario.genome  # Implemente a lógica de mutação adequada para o seu problema
         # adicionar um valor aleatório pequeno a cada gene
         mutated_genome += np.random.uniform(-0.1, 0.1, len(mutated_genome))
         mario.genome = mutated_genome
+        mario.genomeOutput += np.random.uniform(-0.1, 0.1, len(mario.genomeOutput))
 
     def crossover(self, parent1, parent2):
         if parent1 is None or parent2 is None:
             return None
         child_genome = np.mean([parent1.genome, parent2.genome], axis=0)  # média dos genomas dos pais
-        child = Mario(child_genome)
+        child_genome_output = np.mean([parent1.genomeOutput, parent2.genomeOutput], axis=0)
+        child = Mario(child_genome, child_genome_output)
         self.crossover_count += 1
         print("Cruzamento número:", self.crossover_count)
         return child
@@ -295,7 +307,7 @@ class GeneticAlgorithm:
             return None
 
         best_mario = max(tournament_candidates, key=lambda mario: mario.distance_to_pipe)
-        return Mario(best_mario.genome.copy())
+        return Mario(best_mario.genome.copy(), best_mario.genomeOutput.copy())
 
     def create_new_mario(self):
         parent1 = self.select_parent()
@@ -307,14 +319,18 @@ class GeneticAlgorithm:
 
     def train(self, genetic_algorithm, max_generations):
         generation = 0
+        the_best_marios = []
+
         while generation < max_generations:
             simulation = SimulationGame(self.marios, genetic_algorithm)
-            # TODO: retornar nova geracao do game simulation
-            simulation.run_simulation()
-            # print("Novos Marios:", newMarios)
+            dead_marios = simulation.run_simulation()
+            self.marios = dead_marios
 
             new_generation = []
             best_mario = max(self.marios, key=lambda mario: mario.fitness) if self.marios else None
+
+            the_best_marios.append(best_mario)
+
             if best_mario:
                 new_generation.append(best_mario)
 
@@ -341,8 +357,16 @@ class GeneticAlgorithm:
             generation += 1
             print("Geração:", generation)
 
+        return the_best_marios
+
 
 if __name__ == "__main__":
     algorithm = GeneticAlgorithm()
-    algorithm.create_population(4)
-    algorithm.train(algorithm, 1000)
+    algorithm.create_population(5)
+    best_marios = algorithm.train(algorithm, 1000)
+    print("Melhores Marios:", best_marios)
+    best_best_mairos = max(best_marios, key=lambda mario: mario.fitness) if best_marios else None
+
+    game = Game(Mario(best_best_mairos.genome, best_best_mairos.genomeOutput))
+    print("executando jogo a vera")
+    game.run()
