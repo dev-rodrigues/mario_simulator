@@ -1,8 +1,8 @@
 import random
 import numpy as np
 
-from domain.game import SimulationGame
-from domain.mario import Mario
+from domain.entities.game import SimulationGame
+from domain.entities.mario import Mario
 
 
 class GeneticAlgorithm:

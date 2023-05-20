@@ -1,7 +1,7 @@
 import pygame
 import random
 
-from valueble.commons import SCREEN_HEIGHT, WHITE, SCREEN_WIDTH
+from domain.valueble.commons import SCREEN_HEIGHT, WHITE, SCREEN_WIDTH
 
 
 class Pipe:

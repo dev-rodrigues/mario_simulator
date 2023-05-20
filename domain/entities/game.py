@@ -2,9 +2,9 @@ import sys
 
 import pygame
 
-from valueble.commons import SCREEN_WIDTH, SCREEN_HEIGHT, WHITE
-from domain.neural_network import NeuralNetwork
-from domain.pipe import Pipe
+from domain.valueble.commons import SCREEN_WIDTH, SCREEN_HEIGHT, WHITE
+from domain.entities.neural_network import NeuralNetwork
+from domain.entities.pipe import Pipe
 
 
 class Game:

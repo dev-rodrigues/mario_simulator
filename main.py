@@ -1,6 +1,6 @@
-from domain.game import Game
-from domain.genetic import GeneticAlgorithm
-from domain.mario import Mario
+from domain.entities.game import Game
+from domain.entities.genetic import GeneticAlgorithm
+from domain.entities.mario import Mario
 
 
 if __name__ == "__main__":

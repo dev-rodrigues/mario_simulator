@@ -2,7 +2,7 @@ import uuid
 import pygame
 import random
 
-from valueble.commons import SCREEN_HEIGHT
+from domain.valueble.commons import SCREEN_HEIGHT
 
 
 class Mario:
