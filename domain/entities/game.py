@@ -1,3 +1,4 @@
+import random
 import sys
 
 import pygame
@@ -15,10 +16,12 @@ class Game:
 
         self.clock = pygame.time.Clock()
         self.mario = mario
-        self.pipe = Pipe.create_pipe()
+        self.pipes = [Pipe.create_pipe()]
         self.start_time = pygame.time.get_ticks()
         self.speed = 5  # Velocidade inicial
         self.last_speed_increase = 0
+        self.pipe_interval = 2000  # Intervalo entre a criação de novos Pipes
+        self.last_pipe_time = pygame.time.get_ticks()
 
     def increase_speed(self, elapsed_time):
         if elapsed_time - self.last_speed_increase >= 10:
@@ -35,31 +38,38 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE:
-                        self.mario.jump()
 
             self.mario.update()
-            self.pipe.update(self.speed)
+            for pipe in self.pipes:
+                pipe.update(self.speed)
 
-            if self.pipe.x + self.pipe.width < 0:
-                self.pipe = Pipe.create_pipe()
+            current_time = pygame.time.get_ticks()
 
-            if self.mario.x + self.mario.width > self.pipe.x and \
-                    self.mario.x < self.pipe.x + self.pipe.width and \
-                    self.mario.y + self.mario.height > self.pipe.y:
-                print("Game Over")
-                running = False
+            if current_time - self.last_pipe_time > self.pipe_interval:
+                self.pipes.append(Pipe.create_pipe())
+                self.last_pipe_time = current_time
+
+            self.pipes = [pipe for pipe in self.pipes if pipe.x + pipe.width > 0]
+
+            for pipe in self.pipes:
+                if (
+                        self.mario.x + self.mario.width > pipe.x
+                        and self.mario.x < pipe.x + pipe.width
+                        and self.mario.y + self.mario.height > pipe.y
+                ):
+                    print("Game Over")
+                    running = False
 
             elapsed_time = (pygame.time.get_ticks() - self.start_time) // 1000
             self.screen.fill((0, 0, 0))
             self.mario.draw(self.screen)
-            self.pipe.draw(self.screen)
 
-            # Calcula a distância a partir da parte frontal do Pipe
-            distance_to_pipe = self.pipe.x - (self.mario.x + self.mario.width)
+            for pipe in self.pipes:
+                pipe.draw(self.screen)
+
+            distance_to_pipe = self.pipes[0].x - (self.mario.x + self.mario.width)
             print("Distância do Mario para o Pipe:", distance_to_pipe)
-            print("Altura do Pipe:", self.pipe.height)
+            print("Altura do Pipe:", self.pipes[0].height)
 
             nn = NeuralNetwork(
                 3,
@@ -69,7 +79,7 @@ class Game:
                 self.mario.genomeOutput,
             )
 
-            saida = nn.forward([distance_to_pipe, self.speed, self.pipe.height])[0]
+            saida = nn.forward([distance_to_pipe, self.speed, self.pipes[0].height])[0]
             print("O valor da saida é ", saida)
             if saida > 0.5:
                 self.mario.jump()
@@ -90,7 +100,7 @@ class Game:
         sys.exit()
 
 
-class SimulationGame:
+class GameSimulation:
     def __init__(self, marios, genetic_algorithm):
         self.marios = marios
         self.genetic_algorithm = genetic_algorithm
@@ -109,7 +119,7 @@ class SimulationGame:
         dead_marios = []
 
         running = True
-        teste = 0
+        first_execution = 0
 
         while running:
             clock.tick(30)
@@ -120,11 +130,11 @@ class SimulationGame:
 
             distances_to_pipe = [pipe.x - (mario.x + mario.width) for mario, pipe in zip(self.marios, pipes)]
 
-            if teste == 0:
+            if first_execution == 0:
                 for i, mario in enumerate(self.marios):
                     mario.jump()
 
-            teste = teste + 1
+            first_execution = first_execution + 1
 
             for i, mario in enumerate(self.marios):
                 mario.update()

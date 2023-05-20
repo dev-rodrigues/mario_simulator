@@ -1,7 +1,7 @@
 import random
 import numpy as np
 
-from domain.entities.game import SimulationGame
+from domain.entities.game import GameSimulation
 from domain.entities.mario import Mario
 
 
@@ -57,7 +57,7 @@ class GeneticAlgorithm:
         the_best_marios = []
 
         while generation < max_generations:
-            simulation = SimulationGame(self.marios, genetic_algorithm)
+            simulation = GameSimulation(self.marios, genetic_algorithm)
             dead_marios = simulation.run_simulation()
             self.marios = dead_marios
 
