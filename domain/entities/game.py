@@ -31,9 +31,15 @@ class Game:
 
     def run(self):
         running = True
+        teste = 0
 
         while running:
             self.clock.tick(30)
+
+            if teste == 0:
+                self.mario.jump()
+
+            teste += 1
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -105,7 +111,7 @@ class GameSimulation:
         self.marios = marios
         self.genetic_algorithm = genetic_algorithm
 
-    def run_simulation(self):
+    def run_simulation(self, generation):
         pygame.init()
         screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Jump Mario")
@@ -119,7 +125,7 @@ class GameSimulation:
         dead_marios = []
 
         running = True
-        first_execution = 0
+        teste = 0
 
         while running:
             clock.tick(30)
@@ -130,11 +136,11 @@ class GameSimulation:
 
             distances_to_pipe = [pipe.x - (mario.x + mario.width) for mario, pipe in zip(self.marios, pipes)]
 
-            if first_execution == 0:
+            if teste == 0:
                 for i, mario in enumerate(self.marios):
                     mario.jump()
 
-            first_execution = first_execution + 1
+            teste = teste + 1
 
             for i, mario in enumerate(self.marios):
                 mario.update()
@@ -176,10 +182,13 @@ class GameSimulation:
             if elapsed_time - last_speed_increase >= 10 and speed < max_speed:
                 speed += 2
                 last_speed_increase = elapsed_time
-                print("Velocidade aumentada para:", speed)
+                # print("Velocidade aumentada para:", speed)
+
+            self.write_speed(speed, screen)
+            self.write_generation(generation, screen)
 
             font = pygame.font.Font(None, 36)
-            text = font.render("Tempo: {}s".format(elapsed_time), True, WHITE)
+            text = font.render("Time: {}s".format(elapsed_time), True, WHITE)
             text_rect = text.get_rect()
             text_rect.topleft = (10, 10)
             screen.blit(text, text_rect)
@@ -187,3 +196,19 @@ class GameSimulation:
             pygame.display.flip()
 
         return dead_marios
+
+    def write_speed(self, speed, screen):
+        font = pygame.font.Font(None, 36)
+        text = font.render("Speed level: {}".format(speed), True, WHITE)
+        text_rect = text.get_rect()
+        text_rect.topleft = (10, 30)
+        screen.blit(text, text_rect)
+        pygame.display.flip()
+
+    def write_generation(self, generation, screen):
+        font = pygame.font.Font(None, 36)
+        text = font.render("Generation: {}".format(generation), True, WHITE)
+        text_rect = text.get_rect()
+        text_rect.topleft = (10, 50)
+        screen.blit(text, text_rect)
+        pygame.display.flip()

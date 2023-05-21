@@ -1,5 +1,6 @@
 import random
 import numpy as np
+from tqdm import tqdm
 
 from domain.entities.game import GameSimulation
 from domain.entities.mario import Mario
@@ -31,7 +32,7 @@ class GeneticAlgorithm:
         child_genome_output = np.mean([parent1.genomeOutput, parent2.genomeOutput], axis=0)
         child = Mario(child_genome, child_genome_output)
         self.crossover_count += 1
-        print("Cruzamento número:", self.crossover_count)
+        # print("Cruzamento número:", self.crossover_count)
         return child
 
     def select_parent(self):
@@ -53,12 +54,11 @@ class GeneticAlgorithm:
         return child
 
     def train(self, genetic_algorithm, max_generations):
-        generation = 0
         the_best_marios = []
 
-        while generation < max_generations:
+        for i in tqdm(range(max_generations)):  # generation < max_generations:
             simulation = GameSimulation(self.marios, genetic_algorithm)
-            dead_marios = simulation.run_simulation()
+            dead_marios = simulation.run_simulation(i)
             self.marios = dead_marios
 
             new_generation = []
@@ -89,7 +89,7 @@ class GeneticAlgorithm:
                 new_generation.append(child)
 
             self.marios = new_generation
-            generation += 1
-            print("Geração:", generation)
+
+            print("Generation: ", i)
 
         return the_best_marios
