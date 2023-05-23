@@ -1,11 +1,8 @@
-import random
-import sys
-
 import pygame
 
-from domain.valueble.commons import SCREEN_WIDTH, SCREEN_HEIGHT, WHITE
 from domain.entities.neural_network import NeuralNetwork
 from domain.entities.pipe import Pipe
+from domain.valueble.commons import SCREEN_WIDTH, SCREEN_HEIGHT, WHITE
 
 
 class Game:
@@ -103,7 +100,6 @@ class Game:
             pygame.display.flip()
 
         pygame.quit()
-        sys.exit()
 
 
 class GameSimulation:
@@ -121,6 +117,8 @@ class GameSimulation:
         start_time = pygame.time.get_ticks()
         speed = 5  # Velocidade inicial
         last_speed_increase = 0
+        pipe_interval = 2000  # Intervalo entre a criação de novos Pipes
+        last_pipe_time = pygame.time.get_ticks()
         max_speed = 20
         dead_marios = []
 
@@ -159,8 +157,14 @@ class GameSimulation:
 
             for i, pipe in enumerate(pipes):
                 pipe.update(speed)
-                if pipe.x + pipe.width < 0:
-                    pipes[i] = Pipe.create_pipe()
+
+            current_time = pygame.time.get_ticks()
+
+            if current_time - last_pipe_time > pipe_interval:
+                pipes.append(Pipe.create_pipe())
+                last_pipe_time = current_time
+
+            pipes = [pipe for pipe in pipes if pipe.x + pipe.width > 0]
 
             elapsed_time = (pygame.time.get_ticks() - start_time) // 1000
             screen.fill((0, 0, 0))
@@ -171,10 +175,14 @@ class GameSimulation:
                 pipe.draw(screen)
 
             for i, mario in enumerate(self.marios):
-                genome = mario.genome
 
-                nn = NeuralNetwork(3, 6, 1, genome, mario.genomeOutput)
+                nn = NeuralNetwork(3, 6, 1, mario.genome, mario.genomeOutput)
+
+                # TODO: bug quando
                 output = nn.forward([distances_to_pipe[i], speed, pipes[i].height])[0]
+                if output <= 0.5:
+                    print("abaixando")
+                    mario.lower()
 
                 if output > 0.5:
                     mario.jump()
@@ -182,7 +190,6 @@ class GameSimulation:
             if elapsed_time - last_speed_increase >= 10 and speed < max_speed:
                 speed += 2
                 last_speed_increase = elapsed_time
-                # print("Velocidade aumentada para:", speed)
 
             self.write_speed(speed, screen)
             self.write_generation(generation, screen)
@@ -195,6 +202,7 @@ class GameSimulation:
 
             pygame.display.flip()
 
+        pygame.quit()
         return dead_marios
 
     def write_speed(self, speed, screen):
