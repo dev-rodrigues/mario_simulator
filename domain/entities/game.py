@@ -142,16 +142,19 @@ class GameSimulation:
 
             for i, mario in enumerate(self.marios):
                 mario.update()
-                if mario.x + mario.width > pipes[i].x and mario.x < pipes[i].x + pipes[
-                    i].width and mario.y + mario.height > pipes[i].y:
+
+                if self.collided(i, mario, pipes):
                     dead_marios.append(mario)
                     self.marios.pop(i)  # Remove o Mario que colidiu do array
 
                     if len(self.marios) == 0:
                         running = False
 
-                if distances_to_pipe[i] < mario.x:
-                    mario.fitness += 100
+                try:
+                    if distances_to_pipe[i] < mario.x:
+                        mario.fitness += 100
+                except:
+                    pass
 
                 mario.fitness += 1
 
@@ -178,14 +181,17 @@ class GameSimulation:
 
                 nn = NeuralNetwork(3, 6, 1, mario.genome, mario.genomeOutput)
 
-                # TODO: bug quando
-                output = nn.forward([distances_to_pipe[i], speed, pipes[i].height])[0]
-                if output <= 0.5:
-                    print("abaixando")
-                    mario.lower()
+                try:
+                    output = nn.forward([distances_to_pipe[i], speed, pipes[i].height])[0]
+                    if output <= 0.5:
+                        print("abaixando")
+                        mario.lower()
 
-                if output > 0.5:
-                    mario.jump()
+                    if output > 0.5:
+                        mario.jump()
+                except (IndexError, ValueError):
+                    #print("IndexError ou ValueError")
+                    pass
 
             if elapsed_time - last_speed_increase >= 10 and speed < max_speed:
                 speed += 2
@@ -204,6 +210,13 @@ class GameSimulation:
 
         pygame.quit()
         return dead_marios
+
+    def collided(self, i, mario, pipes):
+        try:
+            return mario.x + mario.width > pipes[i].x and mario.x < pipes[i].x + pipes[
+                i].width and mario.y + mario.height > pipes[i].y
+        except IndexError:
+            return True
 
     def write_speed(self, speed, screen):
         font = pygame.font.Font(None, 36)
