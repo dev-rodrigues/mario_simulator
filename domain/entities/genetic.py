@@ -57,8 +57,8 @@ class GeneticAlgorithm:
         the_best_marios = []
 
         for i in tqdm(range(max_generations)):  # generation < max_generations:
-            simulation = GameSimulation(self.marios, genetic_algorithm)
-            dead_marios = simulation.run_simulation(i)
+            simulation = GameSimulation(self.marios, genetic_algorithm, i)
+            dead_marios = simulation.run()
             self.marios = dead_marios
 
             new_generation = []

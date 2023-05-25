@@ -1,30 +1,40 @@
 import pygame
+from abc import ABC, abstractmethod
 
 from domain.entities.neural_network import NeuralNetwork
 from domain.entities.pipe import Pipe
 from domain.valueble.commons import SCREEN_WIDTH, SCREEN_HEIGHT, WHITE
 
 
-class Game:
-    def __init__(self, mario):
+class JumpMario(ABC):
+    def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Jump Mario")
-
         self.clock = pygame.time.Clock()
-        self.mario = mario
-        self.pipes = [Pipe.create_pipe()]
         self.start_time = pygame.time.get_ticks()
         self.speed = 5  # Velocidade inicial
         self.last_speed_increase = 0
-        self.pipe_interval = 2000  # Intervalo entre a criação de novos Pipes
+        self.max_speed = 12
+        self.pipe_interval = 2500  # Intervalo entre a criação de novos Pipes
         self.last_pipe_time = pygame.time.get_ticks()
 
     def increase_speed(self, elapsed_time):
         if elapsed_time - self.last_speed_increase >= 10:
             self.speed += 2
             self.last_speed_increase = elapsed_time
-            print("Velocidade aumentada para:", self.speed)
+
+    @abstractmethod
+    def run(self):
+        pass
+
+
+class Game(JumpMario):
+    def __init__(self, mario):
+
+        super().__init__()
+        self.mario = mario
+        self.pipes = [Pipe.create_pipe()]
 
     def run(self):
         running = True
@@ -84,10 +94,13 @@ class Game:
 
             saida = nn.forward([distance_to_pipe, self.speed, self.pipes[0].height])[0]
             print("O valor da saida é ", saida)
+
+            if saida <= 0.5:
+                self.mario.lower()
+
             if saida > 0.5:
                 self.mario.jump()
 
-            # aumentando a velocidade a cada 60 segundos:
             self.increase_speed(elapsed_time)
 
             # Renderiza o texto na tela
@@ -102,31 +115,22 @@ class Game:
         pygame.quit()
 
 
-class GameSimulation:
-    def __init__(self, marios, genetic_algorithm):
+class GameSimulation(JumpMario):
+
+    def __init__(self, marios, genetic_algorithm, generation):
+        super().__init__()
         self.marios = marios
         self.genetic_algorithm = genetic_algorithm
+        self.generation = generation
 
-    def run_simulation(self, generation):
-        pygame.init()
-        screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        pygame.display.set_caption("Jump Mario")
-
-        clock = pygame.time.Clock()
+    def run(self):
         pipes = [Pipe.create_pipe() for _ in range(len(self.marios))]
-        start_time = pygame.time.get_ticks()
-        speed = 5  # Velocidade inicial
-        last_speed_increase = 0
-        pipe_interval = 2500  # Intervalo entre a criação de novos Pipes
-        last_pipe_time = pygame.time.get_ticks()
-        max_speed = 12
         dead_marios = []
-
         running = True
         teste = 0
 
         while running:
-            clock.tick(30)
+            self.clock.tick(30)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -159,31 +163,31 @@ class GameSimulation:
                 mario.fitness += 1
 
             for i, pipe in enumerate(pipes):
-                pipe.update(speed)
+                pipe.update(self.speed)
 
             current_time = pygame.time.get_ticks()
 
-            if current_time - last_pipe_time > pipe_interval:
+            if current_time - self.last_pipe_time > self.pipe_interval:
                 pipes.append(Pipe.create_pipe())
-                last_pipe_time = current_time
+                self.last_pipe_time = current_time
 
             pipes = [pipe for pipe in pipes if pipe.x + pipe.width > 0]
 
-            elapsed_time = (pygame.time.get_ticks() - start_time) // 1000
-            screen.fill((0, 0, 0))
+            elapsed_time = (pygame.time.get_ticks() - self.start_time) // 1000
+            self.screen.fill((0, 0, 0))
             # for mario in self.marios:
             #     mario.draw(screen)
 
             for pipe in pipes:
-                pipe.draw(screen)
+                pipe.draw(self.screen)
 
             for i, mario in enumerate(self.marios):
-                mario.draw(screen)
+                mario.draw(self.screen)
 
                 nn = NeuralNetwork(3, 6, 1, mario.genome, mario.genomeOutput)
 
                 try:
-                    output = nn.forward([distances_to_pipe[i], speed, pipes[i].height])[0]
+                    output = nn.forward([distances_to_pipe[i], self.speed, pipes[i].height])[0]
                     if output <= 0.5:
                         mario.lower()
 
@@ -192,18 +196,18 @@ class GameSimulation:
                 except (IndexError, ValueError):
                     pass
 
-            if elapsed_time - last_speed_increase >= 10 and speed < max_speed:
-                speed += 2
-                last_speed_increase = elapsed_time
+            if elapsed_time - self.last_speed_increase >= 10 and self.speed < self.max_speed:
+                self.speed += 2
+                self.last_speed_increase = elapsed_time
 
-            self.write_speed(speed, screen)
-            self.write_generation(generation, screen)
+            self.write_speed(self.speed, self.screen)
+            self.write_generation(self.generation, self.screen)
 
             font = pygame.font.Font(None, 36)
             text = font.render("Time: {}s".format(elapsed_time), True, WHITE)
             text_rect = text.get_rect()
             text_rect.topleft = (10, 10)
-            screen.blit(text, text_rect)
+            self.screen.blit(text, text_rect)
 
             pygame.display.flip()
 
