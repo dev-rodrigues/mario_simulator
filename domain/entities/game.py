@@ -117,9 +117,9 @@ class GameSimulation:
         start_time = pygame.time.get_ticks()
         speed = 5  # Velocidade inicial
         last_speed_increase = 0
-        pipe_interval = 2000  # Intervalo entre a criação de novos Pipes
+        pipe_interval = 2500  # Intervalo entre a criação de novos Pipes
         last_pipe_time = pygame.time.get_ticks()
-        max_speed = 20
+        max_speed = 12
         dead_marios = []
 
         running = True
@@ -171,26 +171,25 @@ class GameSimulation:
 
             elapsed_time = (pygame.time.get_ticks() - start_time) // 1000
             screen.fill((0, 0, 0))
-            for mario in self.marios:
-                mario.draw(screen)
+            # for mario in self.marios:
+            #     mario.draw(screen)
 
             for pipe in pipes:
                 pipe.draw(screen)
 
             for i, mario in enumerate(self.marios):
+                mario.draw(screen)
 
                 nn = NeuralNetwork(3, 6, 1, mario.genome, mario.genomeOutput)
 
                 try:
                     output = nn.forward([distances_to_pipe[i], speed, pipes[i].height])[0]
                     if output <= 0.5:
-                        print("abaixando")
                         mario.lower()
 
                     if output > 0.5:
                         mario.jump()
                 except (IndexError, ValueError):
-                    #print("IndexError ou ValueError")
                     pass
 
             if elapsed_time - last_speed_increase >= 10 and speed < max_speed:

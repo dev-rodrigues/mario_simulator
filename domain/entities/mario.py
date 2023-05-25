@@ -6,7 +6,7 @@ from domain.valueble.commons import SCREEN_HEIGHT
 
 
 class Mario:
-    def __init__(self, genome, genomeOutput):
+    def __init__(self, genome, genome_output):
         self.id = uuid.uuid4()
         self.x = 50
         self.y = SCREEN_HEIGHT - 100
@@ -17,7 +17,7 @@ class Mario:
         self.distance_to_pipe = 0
         self.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         self.genome = genome
-        self.genomeOutput = genomeOutput
+        self.genomeOutput = genome_output
         self.fitness = 0
 
     def jump(self):
@@ -27,7 +27,7 @@ class Mario:
 
     def lower(self):
         self.is_jumping = True
-        self.velocity = 20  # Adjust the velocity value as needed
+        self.velocity = 30  # Adjust the velocity value as needed
 
     def update(self):
         if self.is_jumping:
