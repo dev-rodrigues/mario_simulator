@@ -4,3 +4,4 @@ SCREEN_HEIGHT = 600
 
 # Definindo as cores
 WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)

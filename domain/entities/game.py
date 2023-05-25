@@ -175,8 +175,6 @@ class GameSimulation(JumpMario):
 
             elapsed_time = (pygame.time.get_ticks() - self.start_time) // 1000
             self.screen.fill((0, 0, 0))
-            # for mario in self.marios:
-            #     mario.draw(screen)
 
             for pipe in pipes:
                 pipe.draw(self.screen)

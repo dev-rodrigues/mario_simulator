@@ -1,7 +1,7 @@
 import pygame
 import random
 
-from domain.valueble.commons import SCREEN_HEIGHT, WHITE, SCREEN_WIDTH
+from domain.valueble.commons import SCREEN_HEIGHT, GREEN, SCREEN_WIDTH
 
 
 class Pipe:
@@ -15,7 +15,7 @@ class Pipe:
         self.x -= speed
 
     def draw(self, screen):
-        pygame.draw.rect(screen, WHITE, (self.x, self.y, self.width, self.height))
+        pygame.draw.rect(screen, GREEN, (self.x, self.y, self.width, self.height))
 
     @staticmethod
     def create_pipe():
