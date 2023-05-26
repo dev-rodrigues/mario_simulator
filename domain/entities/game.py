@@ -85,8 +85,8 @@ class Game(JumpMario):
             print("Altura do Pipe:", self.pipes[0].height)
 
             nn = NeuralNetwork(
-                3,
                 6,
+                12,
                 1,
                 self.mario.genome,
                 self.mario.genomeOutput,
@@ -154,6 +154,9 @@ class GameSimulation(JumpMario):
                     if len(self.marios) == 0:
                         running = False
 
+                    if self.speed == 13:
+                        self.speed = 5
+
                 try:
                     if distances_to_pipe[i] < mario.x:
                         mario.fitness += 100
@@ -185,7 +188,8 @@ class GameSimulation(JumpMario):
                 nn = NeuralNetwork(3, 6, 1, mario.genome, mario.genomeOutput)
 
                 try:
-                    output = nn.forward([distances_to_pipe[i], self.speed, pipes[i].height])[0]
+                    output = nn.forward([abs(distances_to_pipe[i]), self.speed, pipes[i].height])[0]
+
                     if output <= 0.5:
                         mario.lower()
 
@@ -234,3 +238,4 @@ class GameSimulation(JumpMario):
         text_rect.topleft = (10, 50)
         screen.blit(text, text_rect)
         pygame.display.flip()
+

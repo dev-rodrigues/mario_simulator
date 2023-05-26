@@ -27,7 +27,7 @@ class Mario:
 
     def lower(self):
         self.is_jumping = True
-        self.velocity = 30  # Adjust the velocity value as needed
+        self.velocity = 100  # Adjust the velocity value as needed
 
     def update(self):
         if self.is_jumping:

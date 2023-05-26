@@ -32,7 +32,6 @@ class GeneticAlgorithm:
         child_genome_output = np.mean([parent1.genomeOutput, parent2.genomeOutput], axis=0)
         child = Mario(child_genome, child_genome_output)
         self.crossover_count += 1
-        # print("Cruzamento número:", self.crossover_count)
         return child
 
     def select_parent(self):
@@ -89,7 +88,5 @@ class GeneticAlgorithm:
                 new_generation.append(child)
 
             self.marios = new_generation
-
-            print("Generation: ", i)
 
         return the_best_marios
