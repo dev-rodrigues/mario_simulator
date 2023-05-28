@@ -52,6 +52,13 @@ class GeneticAlgorithm:
             self.mutate(child)
         return child
 
+    def calculate_record(self, initial_record, updated_record):
+        if initial_record == 0:
+            return 100.0
+        else:
+            dif = initial_record - updated_record
+            return (initial_record / dif) * 100
+
     def train(self, genetic_algorithm, max_generations):
         the_best_marios = []
         record = 0
@@ -59,6 +66,10 @@ class GeneticAlgorithm:
         for i in tqdm(range(max_generations)):
             simulation = GameSimulation(self.marios, genetic_algorithm, i, record)
             dead_marios, record_output = simulation.run()
+
+            percent_utilization = self.calculate_record(record, record_output)
+
+            print(f"Generation {i} - Record: {record} - Percent Utilization: {percent_utilization}")
             self.marios = dead_marios
             record = record_output
 

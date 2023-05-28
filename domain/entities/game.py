@@ -1,3 +1,5 @@
+import sys
+
 import pygame
 from abc import ABC, abstractmethod
 
@@ -22,7 +24,7 @@ class JumpMario(ABC):
     def increase_speed(self, elapsed_time):
         if elapsed_time - self.last_speed_increase >= 60:
 
-            if self.speed > self.max_speed:
+            if self.speed <= self.max_speed:
                 self.speed += 1
                 self.last_speed_increase = elapsed_time
 
@@ -95,7 +97,8 @@ class Game(JumpMario):
                 self.mario.genomeOutput,
             )
 
-            saida = nn.forward([distance_to_pipe, self.speed, self.pipes[0].height, self.pipes[0].height])[0]
+            altura = abs(self.mario.y - 550)
+            saida = nn.forward([distance_to_pipe, self.speed, self.pipes[0].height, altura])[0]
             print("O valor da saida é ", saida)
 
             if saida <= 0.5:
@@ -128,11 +131,10 @@ class GameSimulation(JumpMario):
         self.record = record
 
     def run(self):
-        pipes = [Pipe.create_pipe() for _ in range(len(self.marios))]
+        pipes = [Pipe.create_pipe() for _ in range(100)]
         dead_marios = []
         running = True
         teste = 0
-        print("Record: ", self.record)
 
         while running:
             self.clock.tick(30)
@@ -170,6 +172,7 @@ class GameSimulation(JumpMario):
                     if distances_to_pipe[i] < mario.x:
                         mario.fitness += 100
                 except:
+                    mario.update()
                     pass
 
                 mario.fitness += 1
@@ -197,8 +200,7 @@ class GameSimulation(JumpMario):
                 nn = NeuralNetwork(4, 8, 1, mario.genome, mario.genomeOutput)
 
                 try:
-                    altura = abs(mario.y - 550)
-                    output = nn.forward([abs(distances_to_pipe[i]), self.speed, pipes[i].height, altura])[0]
+                    output = nn.forward([abs(distances_to_pipe[i]), self.speed, pipes[i].height, abs(mario.y - 550)])[0]
 
                     if output <= 0.5:
                         mario.lower()
