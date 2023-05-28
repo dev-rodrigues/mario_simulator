@@ -1,3 +1,5 @@
+import sys
+
 import pygame
 
 from domain.entities.game import Game
@@ -7,9 +9,8 @@ from service.training import train
 
 def show_menu():
     print("1 - Start Training")
-    print("2 - Start Server")
-    print("3 - Running with genome")
-    print("4 - Exit")
+    print("2 - Running with genome")
+    print("3 - Exit")
 
 
 def start_training():
@@ -94,14 +95,12 @@ def menu():
             start_training()
 
         elif choice == '2':
-            start_server()
-
-        elif choice == '3':
             running_with_genome()
 
         elif choice == '3':
             print("Saindo do programa...")
-            break
+            print(chr(27) + "[2J")
+            sys.exit()
 
         else:
             print("Opção inválida. Tente novamente.")

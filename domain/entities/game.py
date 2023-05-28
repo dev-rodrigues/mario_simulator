@@ -14,15 +14,17 @@ class JumpMario(ABC):
         self.clock = pygame.time.Clock()
         self.start_time = pygame.time.get_ticks()
         self.speed = 5  # Velocidade inicial
+        self.max_speed = 12  # Velocidade máxima
         self.last_speed_increase = 0
-        self.max_speed = 12
         self.pipe_interval = 2500  # Intervalo entre a criação de novos Pipes
         self.last_pipe_time = pygame.time.get_ticks()
 
     def increase_speed(self, elapsed_time):
-        if elapsed_time - self.last_speed_increase >= 10:
-            self.speed += 2
-            self.last_speed_increase = elapsed_time
+        if elapsed_time - self.last_speed_increase >= 60:
+
+            if self.speed > self.max_speed:
+                self.speed += 1
+                self.last_speed_increase = elapsed_time
 
     @abstractmethod
     def run(self):
@@ -53,6 +55,7 @@ class Game(JumpMario):
                     running = False
 
             self.mario.update()
+
             for pipe in self.pipes:
                 pipe.update(self.speed)
 
@@ -85,14 +88,14 @@ class Game(JumpMario):
             print("Altura do Pipe:", self.pipes[0].height)
 
             nn = NeuralNetwork(
-                6,
-                12,
+                4,
+                8,
                 1,
                 self.mario.genome,
                 self.mario.genomeOutput,
             )
 
-            saida = nn.forward([distance_to_pipe, self.speed, self.pipes[0].height])[0]
+            saida = nn.forward([distance_to_pipe, self.speed, self.pipes[0].height, self.pipes[0].height])[0]
             print("O valor da saida é ", saida)
 
             if saida <= 0.5:
@@ -117,17 +120,19 @@ class Game(JumpMario):
 
 class GameSimulation(JumpMario):
 
-    def __init__(self, marios, genetic_algorithm, generation):
+    def __init__(self, marios, genetic_algorithm, generation, record):
         super().__init__()
         self.marios = marios
         self.genetic_algorithm = genetic_algorithm
         self.generation = generation
+        self.record = record
 
     def run(self):
         pipes = [Pipe.create_pipe() for _ in range(len(self.marios))]
         dead_marios = []
         running = True
         teste = 0
+        print("Record: ", self.record)
 
         while running:
             self.clock.tick(30)
@@ -153,9 +158,13 @@ class GameSimulation(JumpMario):
 
                     if len(self.marios) == 0:
                         running = False
+                        pygame.display.flip()
+                        break
 
-                    if self.speed == 13:
+                    if self.speed == self.max_speed:
                         self.speed = 5
+                else:
+                    self.record += 1
 
                 try:
                     if distances_to_pipe[i] < mario.x:
@@ -185,10 +194,11 @@ class GameSimulation(JumpMario):
             for i, mario in enumerate(self.marios):
                 mario.draw(self.screen)
 
-                nn = NeuralNetwork(3, 6, 1, mario.genome, mario.genomeOutput)
+                nn = NeuralNetwork(4, 8, 1, mario.genome, mario.genomeOutput)
 
                 try:
-                    output = nn.forward([abs(distances_to_pipe[i]), self.speed, pipes[i].height])[0]
+                    altura = abs(mario.y - 550)
+                    output = nn.forward([abs(distances_to_pipe[i]), self.speed, pipes[i].height, altura])[0]
 
                     if output <= 0.5:
                         mario.lower()
@@ -198,10 +208,7 @@ class GameSimulation(JumpMario):
                 except (IndexError, ValueError):
                     pass
 
-            if elapsed_time - self.last_speed_increase >= 10 and self.speed < self.max_speed:
-                self.speed += 2
-                self.last_speed_increase = elapsed_time
-
+            self.increase_speed(elapsed_time)
             self.write_speed(self.speed, self.screen)
             self.write_generation(self.generation, self.screen)
 
@@ -210,11 +217,10 @@ class GameSimulation(JumpMario):
             text_rect = text.get_rect()
             text_rect.topleft = (10, 10)
             self.screen.blit(text, text_rect)
-
             pygame.display.flip()
 
         pygame.quit()
-        return dead_marios
+        return dead_marios, self.record
 
     def collided(self, i, mario, pipes):
         try:
@@ -238,4 +244,3 @@ class GameSimulation(JumpMario):
         text_rect.topleft = (10, 50)
         screen.blit(text, text_rect)
         pygame.display.flip()
-

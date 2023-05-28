@@ -1,3 +1,5 @@
+import time
+
 from domain.entities.genetic import GeneticAlgorithm
 
 
@@ -8,3 +10,4 @@ def train():
     algorithm.create_population(int(population))
     marios = algorithm.train(algorithm, int(generation))
     return max(marios, key=lambda mario: mario.fitness) if marios else None
+

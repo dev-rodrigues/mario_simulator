@@ -13,7 +13,7 @@ class GeneticAlgorithm:
 
     def create_population(self, population_size):
         for _ in range(population_size):
-            genome = np.random.uniform(-1, 1, 3)  # criação aleatória de genoma
+            genome = np.random.uniform(-1, 1, 4)  # criação aleatória de genoma
             genome_output = np.random.uniform(-1, 1, 1)
             mario = Mario(genome, genome_output)
             self.marios.append(mario)
@@ -54,11 +54,13 @@ class GeneticAlgorithm:
 
     def train(self, genetic_algorithm, max_generations):
         the_best_marios = []
+        record = 0
 
-        for i in tqdm(range(max_generations)):  # generation < max_generations:
-            simulation = GameSimulation(self.marios, genetic_algorithm, i)
-            dead_marios = simulation.run()
+        for i in tqdm(range(max_generations)):
+            simulation = GameSimulation(self.marios, genetic_algorithm, i, record)
+            dead_marios, record_output = simulation.run()
             self.marios = dead_marios
+            record = record_output
 
             new_generation = []
             best_mario = max(self.marios, key=lambda mario: mario.fitness) if self.marios else None
@@ -82,8 +84,8 @@ class GeneticAlgorithm:
                 # Aplicar cruzamento para criar um filho
                 child = self.crossover(parent1, parent2)
 
-                if child is not None and random.random() < 0.1:  # 10% de chance de mutação
-                    self.mutate(child)
+                # if child is not None and random.random() < 0.1:  # 10% de chance de mutação
+                self.mutate(child)
 
                 new_generation.append(child)
 
