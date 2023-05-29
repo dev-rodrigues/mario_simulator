@@ -1,4 +1,7 @@
 import random
+import time
+import matplotlib.pyplot as plt
+
 import numpy as np
 from tqdm import tqdm
 
@@ -52,26 +55,27 @@ class GeneticAlgorithm:
             self.mutate(child)
         return child
 
-    def calculate_record(self, initial_record, updated_record):
-        if initial_record == 0:
-            return 100.0
-        else:
-            dif = initial_record - updated_record
-            return (initial_record / dif) * 100
-
     def train(self, genetic_algorithm, max_generations):
         the_best_marios = []
         record = 0
+        curves = []
 
         for i in tqdm(range(max_generations)):
-            simulation = GameSimulation(self.marios, genetic_algorithm, i, record)
+            simulation = GameSimulation(self.marios, genetic_algorithm, i + 1, record)
+            stat_time = time.time()
             dead_marios, record_output = simulation.run()
 
-            percent_utilization = self.calculate_record(record, record_output)
+            if record_output > record:
+                record = record_output
 
-            print(f"Generation {i} - Record: {record} - Percent Utilization: {percent_utilization}")
+            end_time = time.time()
+
+            total_time = end_time - stat_time
+
+            curves.append(Report(i + 1, total_time, record_output))
+
+            print(f"Generation {i + 1} - Record: {record}")
             self.marios = dead_marios
-            record = record_output
 
             new_generation = []
             best_mario = max(self.marios, key=lambda mario: mario.fitness) if self.marios else None
@@ -102,4 +106,25 @@ class GeneticAlgorithm:
 
             self.marios = new_generation
 
+        self.plot_learning_curve(curves)
+
         return the_best_marios
+
+    def plot_learning_curve(self, reports):
+        generations = [report.generation for report in reports]
+        total_times = [report.total_time for report in reports]
+        records = [report.record for report in reports]
+
+        plt.scatter(generations, total_times, c=records, cmap='viridis')
+        plt.colorbar(label='Record')
+        plt.xlabel('Generation')
+        plt.ylabel('Training Time')
+        plt.title('Learning Curve')
+        plt.show()
+
+
+class Report:
+    def __init__(self, generation, total_time, record):
+        self.generation = generation
+        self.total_time = total_time
+        self.record = record
