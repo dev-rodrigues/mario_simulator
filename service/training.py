@@ -1,5 +1,3 @@
-import time
-
 from domain.entities.genetic import GeneticAlgorithm
 
 

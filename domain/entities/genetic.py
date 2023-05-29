@@ -59,11 +59,15 @@ class GeneticAlgorithm:
         the_best_marios = []
         record = 0
         curves = []
+        max_speed = 0
 
         for i in tqdm(range(max_generations)):
             simulation = GameSimulation(self.marios, genetic_algorithm, i + 1, record)
             stat_time = time.time()
-            dead_marios, record_output = simulation.run()
+            dead_marios, record_output, speed = simulation.run()
+
+            if speed > max_speed:
+                max_speed = speed
 
             if record_output > record:
                 record = record_output
@@ -105,6 +109,9 @@ class GeneticAlgorithm:
                 new_generation.append(child)
 
             self.marios = new_generation
+
+            if max_speed == 20 and record_output > record:
+                print("Max speed reached")
 
         self.plot_learning_curve(curves)
 

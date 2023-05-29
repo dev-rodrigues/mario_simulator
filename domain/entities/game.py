@@ -16,7 +16,7 @@ class JumpMario(ABC):
         self.clock = pygame.time.Clock()
         self.start_time = pygame.time.get_ticks()
         self.speed = 5  # Velocidade inicial
-        self.max_speed = 20  # Velocidade máxima
+        self.max_speed = 12  # Velocidade máxima
         self.last_speed_increase = 0
         self.pipe_interval = 2500  # Intervalo entre a criação de novos Pipes
         self.last_pipe_time = pygame.time.get_ticks()
@@ -164,7 +164,7 @@ class GameSimulation(JumpMario):
         dead_marios = []
         running = True
         new_record = 0
-        teste = 0
+        first_jump = 0
 
         while running:
             self.clock.tick(30)
@@ -175,11 +175,11 @@ class GameSimulation(JumpMario):
 
             distances_to_pipe = [pipe.x - (mario.x + mario.width) for mario, pipe in zip(self.marios, pipes)]
 
-            if teste == 0:
+            if first_jump == 0:
                 for i, mario in enumerate(self.marios):
                     mario.jump()
 
-            teste = teste + 1
+            first_jump = first_jump + 1
 
             for i, mario in enumerate(self.marios):
                 mario.update()
@@ -266,7 +266,7 @@ class GameSimulation(JumpMario):
             pygame.display.flip()
 
         pygame.quit()
-        return dead_marios, new_record
+        return dead_marios, new_record, self.speed
 
     def collided(self, i, mario, pipes):
         try:
