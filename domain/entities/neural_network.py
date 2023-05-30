@@ -14,7 +14,7 @@ class NeuralNetwork:
     def forward(self, x):
         # Cálculo da camada oculta
         self.hidden_layer = np.dot(x, self.W1)
-        self.hidden_activation = self.relu(self.hidden_layer)
+        self.hidden_activation = self.sigmoid(self.hidden_layer)
 
         # Cálculo da camada de saída
         output_layer = np.dot(self.hidden_activation, self.W2)

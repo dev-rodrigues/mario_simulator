@@ -16,7 +16,7 @@ class JumpMario(ABC):
         self.clock = pygame.time.Clock()
         self.start_time = pygame.time.get_ticks()
         self.speed = 5  # Velocidade inicial
-        self.max_speed = 12  # Velocidade máxima
+        self.max_speed = 20  # Velocidade máxima
         self.last_speed_increase = 0
         self.pipe_interval = 2500  # Intervalo entre a criação de novos Pipes
         self.last_pipe_time = pygame.time.get_ticks()

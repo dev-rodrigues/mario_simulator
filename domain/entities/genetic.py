@@ -114,6 +114,7 @@ class GeneticAlgorithm:
                 print("Max speed reached")
 
         self.plot_learning_curve(curves)
+        print(the_best_marios)
 
         return the_best_marios
 
@@ -135,3 +136,6 @@ class Report:
         self.generation = generation
         self.total_time = total_time
         self.record = record
+
+    def __str__(self):
+        return f"Generation: {self.generation} - Total Time: {self.total_time} - Record: {self.record}"
