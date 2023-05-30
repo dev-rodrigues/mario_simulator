@@ -82,12 +82,23 @@ class GeneticAlgorithm:
             self.marios = dead_marios
 
             new_generation = []
-            best_mario = max(self.marios, key=lambda mario: mario.fitness) if self.marios else None
+            percent_for_best = int((20 * len(self.marios))/100)
+            best_marios = []
 
-            the_best_marios.append(best_mario)
+            # classifica os marios pelo fitness
+            self.marios.sort(key=lambda mario: mario.fitness, reverse=True)
 
-            if best_mario:
-                new_generation.append(best_mario)
+            if len(self.marios) >= percent_for_best:
+                best_marios = self.marios[:percent_for_best]
+            else:
+                best_marios = self.marios
+
+            #best_marios = max(self.marios, key=lambda mario: mario.fitness) if self.marios else None
+
+            the_best_marios.extend(best_marios)
+
+            if best_marios:
+                new_generation.extend(best_marios)
 
             while len(new_generation) < len(self.marios):
                 parent1 = None
@@ -103,8 +114,8 @@ class GeneticAlgorithm:
                 # Aplicar cruzamento para criar um filho
                 child = self.crossover(parent1, parent2)
 
-                # if child is not None and random.random() < 0.1:  # 10% de chance de mutação
-                self.mutate(child)
+                if child is not None and random.random() < 0.1:  # 10% de chance de mutação
+                    self.mutate(child)
 
                 new_generation.append(child)
 
