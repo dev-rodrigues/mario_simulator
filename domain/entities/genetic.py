@@ -47,14 +47,6 @@ class GeneticAlgorithm:
         best_mario = max(tournament_candidates, key=lambda mario: mario.distance_to_pipe)
         return Mario(best_mario.genome.copy(), best_mario.genomeOutput.copy())
 
-    def create_new_mario(self):
-        parent1 = self.select_parent()
-        parent2 = self.select_parent()
-        child = self.crossover(parent1, parent2)
-        if child is not None:
-            self.mutate(child)
-        return child
-
     def train(self, genetic_algorithm, max_generations):
         the_best_marios = []
         record = 0
