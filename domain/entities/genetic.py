@@ -80,11 +80,7 @@ class GeneticAlgorithm:
             # classifica os marios pelo fitness
             self.marios.sort(key=lambda mario: mario.fitness, reverse=True)
 
-            if len(self.marios) >= percent_for_best:
-                best_marios = self.marios[:percent_for_best]
-            else:
-                best_marios = self.marios
-
+            best_marios = self.marios[:percent_for_best]
             #best_marios = max(self.marios, key=lambda mario: mario.fitness) if self.marios else None
 
             the_best_marios.extend(best_marios)
