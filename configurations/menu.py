@@ -1,18 +1,11 @@
 import sys
-import threading
 
-from fastapi import FastAPI
-from pydantic import BaseModel
-import uvicorn
 import pygame
 
+from configurations.api import start_api
 from domain.entities.game import Game
 from domain.entities.mario import Mario
-from domain.entities.neural_network import NeuralNetwork
-from entrypoint.dto.request import MustJump
 from service.training import train
-
-app = FastAPI()
 
 
 def show_menu():
@@ -37,23 +30,6 @@ def start_training():
             write_genome_on_file(mario)
 
     print("Concluded training.")
-
-
-@app.post("/jump")
-def request(payload: MustJump):
-    genome, genomeOutput = read_genome_on_file()
-
-    nn = NeuralNetwork(
-        4,
-        8,
-        1,
-        genome,
-        genomeOutput
-    )
-
-    output = nn.forward([payload.distance, payload.velocity, payload.height, payload.posix])[0]
-
-    return {"output": output}
 
 
 def running_with_genome():
@@ -108,8 +84,7 @@ def exist_genome_on_file():
 
 
 def menu():
-    uvicorn_thread = threading.Thread(target=uvicorn.run, args=(app,), kwargs={"host": "0.0.0.0", "port": 8000})
-    uvicorn_thread.start()
+    start_api()
 
     while True:
         show_menu()

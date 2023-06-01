@@ -20,7 +20,7 @@ class JumpMario(ABC):
         self.last_speed_increase = 0
         self.pipe_interval = 2500  # Intervalo entre a criação de novos Pipes
         self.last_pipe_time = pygame.time.get_ticks()
-        self.pipes = [Pipe.create_pipe() for _ in range(200)]
+        # self.pipes = [Pipe.create_pipe() for _ in range(200)]
 
     def increase_speed(self, elapsed_time):
         if elapsed_time - self.last_speed_increase >= 60:
@@ -84,6 +84,7 @@ class Game(JumpMario):
 
         super().__init__()
         self.mario = mario
+        self.pipes = [Pipe.create_pipe() for _ in range(200)]
 
     def run(self):
         running = True
@@ -176,7 +177,7 @@ class GameSimulation(JumpMario):
         self.record = record
 
     def run(self):
-        # pipes = [Pipe.create_pipe() for _ in range(200)]
+        pipes = [Pipe.create_pipe() for _ in range(200)]
         dead_marios = []
         running = True
         new_record = 0
@@ -189,7 +190,7 @@ class GameSimulation(JumpMario):
                 if event.type == pygame.QUIT:
                     running = False
 
-            distances_to_pipe = [pipe.x - (mario.x + mario.width) for mario, pipe in zip(self.marios, self.pipes)]
+            distances_to_pipe = [pipe.x - (mario.x + mario.width) for mario, pipe in zip(self.marios, pipes)]
 
             if first_jump == 0:
                 for i, mario in enumerate(self.marios):
@@ -200,7 +201,7 @@ class GameSimulation(JumpMario):
             for i, mario in enumerate(self.marios):
                 mario.update()
 
-                if self.collided(i, mario, self.pipes):
+                if self.collided(i, mario, pipes):
                     dead_marios.append(mario)
                     self.marios.pop(i)  # Remove o Mario que colidiu do array
 
@@ -223,19 +224,19 @@ class GameSimulation(JumpMario):
 
                 mario.fitness += 1
 
-            for i, pipe in enumerate(self.pipes):
+            for i, pipe in enumerate(pipes):
                 pipe.update(self.speed)
 
             current_time = pygame.time.get_ticks()
 
             if current_time - self.last_pipe_time > self.pipe_interval:
-                self.pipes.append(Pipe.create_pipe())
+                pipes.append(Pipe.create_pipe())
                 self.last_pipe_time = current_time
 
             # if len(pipes) == 0:
             #     pipes = [Pipe.create_pipe() for _ in range(100)]
 
-            pipes = [pipe for pipe in self.pipes if pipe.x + pipe.width > 0]
+            pipes = [pipe for pipe in pipes if pipe.x + pipe.width > 0]
 
             if len(pipes) == 0:
                 pipes = [Pipe.create_pipe() for _ in range(200)]
