@@ -11,8 +11,8 @@ from domain.valueble.commons import SCREEN_WIDTH, SCREEN_HEIGHT, WHITE
 class JumpMario(ABC):
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Jump Mario")
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
         self.start_time = pygame.time.get_ticks()
         self.speed = 5  # Velocidade inicial
@@ -20,43 +20,12 @@ class JumpMario(ABC):
         self.last_speed_increase = 0
         self.pipe_interval = 2500  # Intervalo entre a criação de novos Pipes
         self.last_pipe_time = pygame.time.get_ticks()
-        # self.pipes = [Pipe.create_pipe() for _ in range(200)]
 
     def increase_speed(self, elapsed_time):
         if elapsed_time - self.last_speed_increase >= 60:
             if self.speed <= self.max_speed:
                 self.speed += 1
                 self.last_speed_increase = elapsed_time
-
-    def delete_genome_on_file(self):
-        file = open("genome.txt", "w")
-        file.write("")
-        file.close()
-
-    def exist_genome_on_file(self):
-        try:
-            file = open("genome.txt", "r")
-            file.close()
-            return True
-        except IOError:
-            return False
-
-    def write_genome_on_file(self, mario):
-        file = open("genome.txt", "w")
-
-        for gene in mario.genome:
-            file.write(str(gene) + "\n")
-
-        file.write(str(mario.genomeOutput))
-
-        file.close()
-
-    def update_genome(self, mario):
-        if not self.exist_genome_on_file():
-            self.write_genome_on_file(mario)
-        else:
-            self.delete_genome_on_file()
-            self.write_genome_on_file(mario)
 
     def write_speed(self, speed, screen):
         font = pygame.font.Font(None, 36)
